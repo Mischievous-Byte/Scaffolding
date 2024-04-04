@@ -9,7 +9,7 @@ namespace MischievousByte.Scaffolding
     public static partial class PersistentData
     {
 
-        private static Dictionary<string, object> cache = new();
+        internal static Dictionary<string, object> cache = new();
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]

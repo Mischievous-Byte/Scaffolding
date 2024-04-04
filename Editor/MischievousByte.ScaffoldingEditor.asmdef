@@ -1,0 +1,18 @@
+{
+    "name": "MischievousByte.ScaffoldingEditor",
+    "rootNamespace": "MischievousByte.ScaffoldingEditor",
+    "references": [
+        "GUID:c63945a1d46254c45944b04b975c10f4"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
