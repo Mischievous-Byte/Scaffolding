@@ -3,10 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using UnityEditor;
 using UnityEngine;
 
 namespace MischievousByte.Scaffolding
@@ -15,68 +13,87 @@ namespace MischievousByte.Scaffolding
     {
 #if UNITY_EDITOR
 
+        private class PreBuiltProcessor : UnityEditor.Build.IPreprocessBuildWithReport
+        {
+            public int callbackOrder => 1;
+
+            public void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
+            {
+                DeleteDumpFiles();
+
+                
+
+                var dumpFile = ScriptableObject.CreateInstance<PersistentDataDump>();
+                dumpFile.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
+
+                foreach (var pair in cache)
+                    dumpFile.containers.Add(new() { key = pair.Key, data = pair.Value });
+
+                UnityEditor.AssetDatabase.CreateAsset(dumpFile, "Assets/scaffolding_persistent_dump.asset");
+                
+                UnityEditor.AssetDatabase.Refresh();
+
+                var assets = UnityEditor.PlayerSettings.GetPreloadedAssets().Where(obj => !(obj is PersistentDataDump)).ToList();
+                assets.Add(dumpFile);
+                UnityEditor.PlayerSettings.SetPreloadedAssets(assets.ToArray());
+            }
+        }
+
+        private class PostBuiltProcessor : UnityEditor.Build.IPostprocessBuildWithReport
+        {
+            public int callbackOrder => 0;
+
+            public void OnPostprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
+            {
+                DeleteDumpFiles();
+            }
+        }
+
+        [Serializable]
+        private struct SerializableContainer
+        {
+            public string type;
+
+            [SerializeReference]
+            public object data;
+        }
+
         private const string relativeStorageLocation = "ProjectSettings/scaffolding/persistent_data/";
         private static string storageLocation;
 
-        private static Dictionary<string, object> cache = new();
         private static partial void Initialize()
         {
             storageLocation = Path.GetFullPath(Path.Combine(Application.dataPath, "../", relativeStorageLocation));
-
             Directory.CreateDirectory(storageLocation);
 
-            EditorApplication.quitting += OnQuit;
-            AssemblyReloadEvents.beforeAssemblyReload += OnReload;
-            EditorApplication.playModeStateChanged += OnPlayModeChange;
+            UnityEditor.EditorApplication.quitting += PreventLoss;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload += PreventLoss;
 
-            foreach(string path in Directory.GetFiles(storageLocation).Where(s => s.EndsWith(".json")))
+            Import();
+
+            DeleteDumpFiles();
+        }
+
+        private static void Import()
+        {
+            foreach (string path in Directory.GetFiles(storageLocation).Where(s => s.EndsWith(".json")))
             {
                 string key = Path.GetFileNameWithoutExtension(path);
                 byte[] bytes = File.ReadAllBytes(path);
                 string json = Encoding.UTF8.GetString(bytes);
-                
-                Container container = JsonUtility.FromJson<Container>(json);
+
+                SerializableContainer container = JsonUtility.FromJson<SerializableContainer>(json);
 
                 cache.Add(key, container.data);
             }
         }
 
-        public static partial T Load<T>(string key) where T : class, new()
+        private static void PreventLoss()
         {
-            if (!Regex.IsMatch(key, validNameRegex))
-                throw new ArgumentException(nameof(key));
-
-            if (cache.ContainsKey(key) && cache[key] is T)
-                return (T)cache[key];
-
-            T data = new T();
-            cache.Add(key, data);
-
-            return data;
-        }
-
-        private static void OnReload()
-        {
-            EditorApplication.quitting -= OnQuit;
-            AssemblyReloadEvents.beforeAssemblyReload -= OnReload;
-            EditorApplication.playModeStateChanged -= OnPlayModeChange;
+            UnityEditor.EditorApplication.quitting -= PreventLoss;
+            UnityEditor.AssemblyReloadEvents.beforeAssemblyReload -= PreventLoss;
 
             Dump();
-        }
-
-        private static void OnQuit()
-        {
-            EditorApplication.quitting -= OnQuit;
-            AssemblyReloadEvents.beforeAssemblyReload -= OnReload;
-            EditorApplication.playModeStateChanged -= OnPlayModeChange;
-
-            Dump();
-        }
-
-        private static void OnPlayModeChange(PlayModeStateChange change)
-        {
-            if (change == PlayModeStateChange.ExitingEditMode || change == PlayModeStateChange.ExitingPlayMode)
-                Dump();
         }
 
         private static void Dump()
@@ -90,7 +107,7 @@ namespace MischievousByte.Scaffolding
             string path = Path.Combine(storageLocation, $"{key}.json");
             var stream = File.Create(path);
 
-            Container container = new()
+            SerializableContainer container = new()
             {
                 type = cache[key].GetType().AssemblyQualifiedName,
                 data = cache[key]
@@ -101,6 +118,16 @@ namespace MischievousByte.Scaffolding
 
             stream.Write(bytes, 0, bytes.Length);
             stream.Close();
+        }
+
+
+        private static void DeleteDumpFiles()
+        {
+            var dumps = Resources.FindObjectsOfTypeAll<PersistentDataDump>();
+            foreach (var dump in dumps)
+                UnityEditor.AssetDatabase.DeleteAsset(UnityEditor.AssetDatabase.GetAssetPath(dump));
+
+            UnityEditor.AssetDatabase.Refresh();
         }
 #endif
     }
