@@ -31,6 +31,7 @@ namespace MischievousByte.Scaffolding
             if (cache.ContainsKey(key) && cache[key] is T)
                 return (T)cache[key];
 
+            Debug.Log("Creating new!");
             T data = new T();
             cache.Add(key, data);
 

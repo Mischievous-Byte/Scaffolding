@@ -19,7 +19,7 @@ namespace MischievousByte.Scaffolding
 
             public void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
             {
-                DeleteDumpFiles();
+                DeleteDumpAssets();
 
                 
 
@@ -45,7 +45,7 @@ namespace MischievousByte.Scaffolding
 
             public void OnPostprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
             {
-                DeleteDumpFiles();
+                DeleteDumpAssets();
             }
         }
 
@@ -71,7 +71,8 @@ namespace MischievousByte.Scaffolding
 
             Import();
 
-            DeleteDumpFiles();
+            DeleteDumpAssets();
+
         }
 
         private static void Import()
@@ -121,7 +122,7 @@ namespace MischievousByte.Scaffolding
         }
 
 
-        private static void DeleteDumpFiles()
+        private static void DeleteDumpAssets()
         {
             var dumps = Resources.FindObjectsOfTypeAll<PersistentDataDump>();
             foreach (var dump in dumps)
