@@ -27,7 +27,7 @@ namespace MischievousByte.Scaffolding
                 dumpFile.hideFlags = HideFlags.NotEditable | HideFlags.HideInInspector;
 
                 foreach (var pair in cache)
-                    dumpFile.containers.Add(new() { key = pair.Key, data = pair.Value });
+                    dumpFile.containers.Add(new() { key = pair.Key, data = pair.Value.Raw });
 
                 UnityEditor.AssetDatabase.CreateAsset(dumpFile, "Assets/scaffolding_persistent_dump.asset");
                 
@@ -83,9 +83,19 @@ namespace MischievousByte.Scaffolding
                 byte[] bytes = File.ReadAllBytes(path);
                 string json = Encoding.UTF8.GetString(bytes);
 
-                SerializableContainer container = JsonUtility.FromJson<SerializableContainer>(json);
+                try
+                {
+                    SerializableContainer container = JsonUtility.FromJson<SerializableContainer>(json);
 
-                cache.Add(key, container.data);
+                    Type wt = typeof(Wrapper<>).MakeGenericType(container.data.GetType());
+                    IWrapper wrapper = (IWrapper) Activator.CreateInstance(wt, container.data);
+
+                    cache.Add(key, wrapper);
+                } catch(Exception e)
+                {
+                    Debug.LogError(e);
+                }
+               
             }
         }
 
@@ -110,8 +120,8 @@ namespace MischievousByte.Scaffolding
 
             SerializableContainer container = new()
             {
-                type = cache[key].GetType().AssemblyQualifiedName,
-                data = cache[key]
+                type = cache[key].Raw.GetType().AssemblyQualifiedName,
+                data = cache[key].Raw
             };
 
             string json = JsonUtility.ToJson(container, true);

@@ -1,12 +1,10 @@
-using Codice.CM.Common.Tree.Partial;
-using JetBrains.Annotations;
 using MischievousByte.Scaffolding;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -28,11 +26,32 @@ namespace MischievousByte.ScaffoldingEditor
             window.Show();
         }
 
+        private void OnEnable()
+        {
+            Debug.Log("OnEnable");
+
+            PersistentData.onEditorCacheChange += OnCacheChange;
+        }
+
+        private void OnDisable()
+        {
+            Debug.Log("OnDisable");
+            PersistentData.onEditorCacheChange -= OnCacheChange;
+        }
+
+        private void OnCacheChange()
+        {
+            TreeView tv = rootVisualElement.Q<TreeView>();
+            if(tv != null)
+                UpdateTree(tv);
+        }
+
         private const int minWidth = 300;
         private const int minHeight = 200;
 
         private void CreateGUI()
         {
+            Debug.Log("CreateGUI");
             minSize = new Vector2(minWidth, minHeight);
 
             // Each editor window contains a root VisualElement object
@@ -44,14 +63,14 @@ namespace MischievousByte.ScaffoldingEditor
             TwoPaneSplitView splitView = new TwoPaneSplitView(0, 150, TwoPaneSplitViewOrientation.Horizontal);
 
 
-            splitView.Add(BuildKeyExplorer());
+            splitView.Add(CreateKeyExplorer());
             splitView.Add(new VisualElement());
             root.Add(splitView);
         }
 
 
         
-        private VisualElement BuildKeyExplorer()
+        private VisualElement CreateKeyExplorer()
         {
             VisualElement root = new VisualElement();
             root.style.minWidth = 100;
@@ -85,7 +104,6 @@ namespace MischievousByte.ScaffoldingEditor
                 image.style.height = 16;
                 image.style.minHeight = 16;
 
-
                 return container;
             };
 
@@ -95,17 +113,11 @@ namespace MischievousByte.ScaffoldingEditor
 
                 Texture icon;
                 if(data.data)
-                    //icon = EditorGUIUtility.IconContent(tree.IsExpanded(index) ? "Cubemap Icon" : "PrefabModel Icon").image; 
                     icon = EditorGUIUtility.IconContent("ScriptableObject Icon").image; 
-                    //icon = EditorGUIUtility.IconContent("LODGroup Icon").image; 
                 else
                     icon = EditorGUIUtility.IconContent(tree.IsExpanded(index) ? "FolderOpened Icon" : "Folder Icon").image;
 
-
                 element.Q<Image>().image = icon;
-
-                
-                
                 element.Q<Label>().text = data.label;
             };
 
@@ -143,6 +155,9 @@ namespace MischievousByte.ScaffoldingEditor
                 return r;
             }
 
+            Node[] roots = GetKeyTree();
+
+            
             foreach (var n in GetKeyTree())
             {
                 items.Add(GoDeeper(n));
@@ -170,8 +185,6 @@ namespace MischievousByte.ScaffoldingEditor
                 label = "root",
                 children = new()
             };
-
-
 
             foreach (var path in PersistentData.cache.Keys.Select(key => key.Split(".")))
             {
