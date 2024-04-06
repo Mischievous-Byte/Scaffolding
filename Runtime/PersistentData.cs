@@ -8,6 +8,18 @@ namespace MischievousByte.Scaffolding
 {
     public static partial class PersistentData
     {
+        [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
+        public class EnsureAttribute : Attribute
+        {
+            public readonly string Key;
+            public readonly Type Type;
+            public EnsureAttribute(string key, Type type)
+            {
+                Key = key;
+                Type = type;
+            }
+        }
+
         internal interface IWrapper
         {
             public object Raw { get; }
@@ -35,7 +47,6 @@ namespace MischievousByte.Scaffolding
 
         internal static event Action onEditorCacheChange;
 
-        [UnityEditor.InitializeOnLoadMethod]
 #else
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
 #endif
@@ -44,9 +55,6 @@ namespace MischievousByte.Scaffolding
         static PersistentData()
         {
             Initialize();
-#if UNITY_EDITOR
-            onEditorCacheChange?.Invoke();
-#endif
         }
 
 
@@ -54,7 +62,7 @@ namespace MischievousByte.Scaffolding
 
         public static ref T Load<T>(string key) where T : struct
         {
-            if (!Regex.IsMatch(key, "^[a-zA-Z0-9_.-]*$"))
+            if (!IsValidKey(key))
                 throw new ArgumentException(nameof(key));
             
             Wrapper<T> wrapper;
@@ -73,5 +81,8 @@ namespace MischievousByte.Scaffolding
 
             return ref wrapper.data;
         }
+
+
+        private static bool IsValidKey(string key) => key != string.Empty && Regex.IsMatch(key, "^[a-zA-Z0-9_.-]*$");
     }
 }
