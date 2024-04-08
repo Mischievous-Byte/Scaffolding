@@ -4,18 +4,16 @@ using UnityEngine;
 
 namespace MischievousByte.Scaffolding
 {
-    internal sealed class PersistentDataDump : ScriptableObject
+    internal sealed class CodeAssetDump : ScriptableObject
     {
         [System.Serializable]
-        internal struct Container
+        internal struct RuntimeContainer
         {
             public string key;
-
-            [SerializeReference]
-            public object data;
+            public string json;
         }
 
         [SerializeField]
-        public List<Container> containers = new();
+        public List<RuntimeContainer> containers = new();
     }
 }

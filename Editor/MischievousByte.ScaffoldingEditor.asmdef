@@ -2,7 +2,8 @@
     "name": "MischievousByte.ScaffoldingEditor",
     "rootNamespace": "MischievousByte.ScaffoldingEditor",
     "references": [
-        "GUID:c63945a1d46254c45944b04b975c10f4"
+        "GUID:c63945a1d46254c45944b04b975c10f4",
+        "GUID:416d137b1126dbf408443d029c73482a"
     ],
     "includePlatforms": [
         "Editor"

@@ -2,16 +2,15 @@ using MischievousByte.Scaffolding;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
 using UnityEditor;
+using UnityEditor.PackageManager.UI;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace MischievousByte.ScaffoldingEditor
 {
-    public sealed partial class PersistentDataInspector : EditorWindow
+    public sealed partial class CodeAssetExplorer : EditorWindow
     {
         private struct KeyData
         {
@@ -19,10 +18,11 @@ namespace MischievousByte.ScaffoldingEditor
             public bool data;
         }
 
-        [MenuItem("Window/Persistent Data Inspector")]
+        [MenuItem("Window/Code Asset Explorer")]
         private static void OpenWindow()
         {
-            var window = GetWindow<PersistentDataInspector>();
+            var window = GetWindow<CodeAssetExplorer>();
+           
             window.Show();
         }
 
@@ -32,6 +32,9 @@ namespace MischievousByte.ScaffoldingEditor
 
         private void CreateGUI()
         {
+            titleContent = new GUIContent("Code Asset Explorer");
+            titleContent.image = EditorGUIUtility.IconContent("CustomTool").image;
+
             minSize = new Vector2(minWidth, minHeight);
 
             VisualElement root = rootVisualElement;
@@ -42,19 +45,15 @@ namespace MischievousByte.ScaffoldingEditor
             TwoPaneSplitView splitView = new TwoPaneSplitView(0, 150, TwoPaneSplitViewOrientation.Horizontal);
 
             KeyExplorer explorer = new KeyExplorer();
-            VisualElement inspector = new VisualElement();
+            Inspector inspector = new Inspector();
 
-            Label label = new Label();
-            inspector.Add(label);
-
-            explorer.onSelectionChange += (e) =>
-            {
-                Debug.Log("Hello World!");
-            };
+            inspector.property = new SerializedObject(this).FindProperty("editableData");
+            explorer.onSelectionChange += inspector.UpdateSelection;
 
             splitView.Add(explorer);
             splitView.Add(inspector);
             root.Add(splitView);
         }
+
     }
 }

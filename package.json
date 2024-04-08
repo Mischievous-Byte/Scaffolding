@@ -1,10 +1,13 @@
 {
-    "name": "com.mischievous-byte.scaffolding",
-    "displayName": "Scaffolding",
-    "version": "0.0.1",
-    "description": "-",
-    "author": {
-      "name": "Laurens Kruis"
-    },
-    "type": "library"
+  "name": "com.mischievous-byte.scaffolding",
+  "displayName": "Scaffolding",
+  "version": "1.0.0",
+  "description": "-",
+  "author": {
+    "name": "Laurens Kruis"
+  },
+  "type": "library",
+  "dependencies": {
+    "com.unity.properties.ui": "2.1.0-exp.1"
+  }
 }
