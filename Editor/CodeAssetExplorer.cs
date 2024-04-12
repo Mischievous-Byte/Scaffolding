@@ -33,7 +33,7 @@ namespace MischievousByte.ScaffoldingEditor
         private void CreateGUI()
         {
             titleContent = new GUIContent("Code Asset Explorer");
-            titleContent.image = EditorGUIUtility.IconContent("CustomTool").image;
+            titleContent.image = EditorGUIUtility.IconContent(Scaffolding.PackageInfo.Location + "Editor/Icons/CodeAsset Icon.png").image;//EditorGUIUtility.IconContent("CustomTool").image;
 
             minSize = new Vector2(minWidth, minHeight);
 

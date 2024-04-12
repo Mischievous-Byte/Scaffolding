@@ -69,7 +69,7 @@ namespace MischievousByte.ScaffoldingEditor
                 tree.bindItem = (element, i) =>
                 {
                     var itemData = tree.GetItemDataForIndex<ItemData>(i);
-                    Texture icon = EditorGUIUtility.IconContent(itemData.data ? "ScriptableObject Icon" : 
+                    Texture icon = EditorGUIUtility.IconContent(itemData.data ? Scaffolding.PackageInfo.Location + "Editor/Icons/CodeAsset Icon.png" : 
                         tree.IsExpanded(i) ? "FolderOpened Icon" : "Folder Icon").image;
 
                     element.tooltip = itemData.key;
